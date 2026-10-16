@@ -910,12 +910,13 @@ body{background:linear-gradient(135deg,#f5f9ff,#edf5ff);color:#122b4d}
 .class-card-icon{width:54px;height:54px;border-radius:16px;background:linear-gradient(135deg,#dcecff,#b7dcff);display:flex;align-items:center;justify-content:center;font-size:27px}
 .class-card-count{margin-left:auto;font-size:26px;font-weight:800;color:#1769d2}
 .class-card-open{color:#1769d2;font-size:13px;font-weight:700;margin-top:18px}
-.student-chart-row{display:grid;grid-template-columns:minmax(130px,210px) minmax(150px,1fr) 100px;gap:14px;align-items:center;padding:12px 0;border-bottom:1px solid #edf2f9}
-.student-chart-name{font-size:13px;font-weight:800;color:#193d68;overflow-wrap:anywhere}
-.student-chart-track{height:18px;background:#edf3fb;border-radius:999px;overflow:hidden;display:flex}
-.student-chart-track span{height:100%;display:block;min-width:0}
-.student-chart-total{font-size:12px;color:#647894;text-align:right;white-space:nowrap}
-@media(max-width:650px){.student-chart-row{grid-template-columns:1fr;gap:7px}.student-chart-total{text-align:left}.class-card-count{font-size:22px}}
+.student-chart-row{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:8px;min-width:92px;max-width:150px;flex:1;padding:10px 6px}
+.student-chart-name{font-size:12px;font-weight:800;color:#193d68;overflow-wrap:anywhere;text-align:center;min-height:34px;display:flex;align-items:flex-end;justify-content:center}
+.student-chart-track{height:150px;width:58px;max-width:100%;background:#edf3fb;border-radius:10px 10px 4px 4px;overflow:hidden;display:flex;flex-direction:column-reverse;justify-content:flex-start;border:1px solid #dce8f6}
+.student-chart-track span{width:100%!important;display:block;min-height:0;flex-shrink:0}
+.student-chart-total{font-size:11px;color:#647894;text-align:center;white-space:nowrap}
+.student-chart-bars{display:flex;align-items:flex-end;justify-content:flex-start;gap:12px;overflow-x:auto;padding:12px 2px 4px;min-height:230px}
+@media(max-width:650px){.student-chart-row{min-width:88px;max-width:110px}.student-chart-track{height:120px;width:48px}.student-chart-name{font-size:11px}.student-chart-total{text-align:center}.class-card-count{font-size:22px}}
 \n</style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode"></script>
@@ -1358,6 +1359,33 @@ body{background:linear-gradient(135deg,#f5f9ff,#edf5ff);color:#122b4d}
 
                         <option value="Bahasa Inggris">
                             Bahasa Inggris
+                        </option>
+
+                        <option value="Pendidikan Pancasila">
+                            Pendidikan Pancasila
+                        </option>
+
+                        <option value="Bahasa Sunda">
+                            Bahasa Sunda
+                        </option>
+                        <option value="Geografi">
+                            Geografi
+                        </option>
+
+                        <option value="Sejarah">
+                            Sejarah
+                        </option>
+
+                        <option value="Ekonomi">
+                            Ekonomi
+                        </option>
+
+                        <option value="Seni Budaya">
+                            Seni Budaya
+                        </option>
+
+                        <option value="Sosiologi">
+                            Sosiologi
                         </option>
 
                         <option value="Matematika">
@@ -1870,7 +1898,7 @@ body{background:linear-gradient(135deg,#f5f9ff,#edf5ff);color:#122b4d}
         <div class="card" style="margin-bottom:20px;">
             <div class="card-title">📊 Grafik Kehadiran per Siswa</div>
             <p style="font-size:13px;color:#647894;margin:-8px 0 18px;">Grafik berdasarkan seluruh catatan absensi yang tersimpan di Firebase. Arahkan ke batang untuk melihat jumlahnya.</p>
-            <div id="grafikKehadiranPerSiswa" style="display:grid;gap:16px;">
+            <div id="grafikKehadiranPerSiswa" class="student-chart-bars">
                 <div class="chart-empty">Pilih kelas untuk memuat grafik.</div>
             </div>
             <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:18px;font-size:12px;color:#647894;">
@@ -1919,6 +1947,33 @@ body{background:linear-gradient(135deg,#f5f9ff,#edf5ff);color:#122b4d}
 
             <span class="badge badge-hadir">
                 Bahasa Inggris
+            </span>
+
+            <span class="badge badge-hadir">
+                Pendidikan Pancasila
+            </span>
+
+            <span class="badge badge-hadir">
+                Bahasa Sunda
+            </span>
+            <span class="badge badge-hadir">
+                Geografi
+            </span>
+
+            <span class="badge badge-hadir">
+                Sejarah
+            </span>
+
+            <span class="badge badge-hadir">
+                Ekonomi
+            </span>
+
+            <span class="badge badge-hadir">
+                Seni Budaya
+            </span>
+
+            <span class="badge badge-hadir">
+                Sosiologi
             </span>
 
             <span class="badge badge-hadir">
@@ -2320,6 +2375,25 @@ body{background:linear-gradient(135deg,#f5f9ff,#edf5ff);color:#122b4d}
 
                     <option>
                         Bahasa Inggris
+                    </option>
+                    <option>
+                        Geografi
+                    </option>
+
+                    <option>
+                        Sejarah
+                    </option>
+
+                    <option>
+                        Ekonomi
+                    </option>
+
+                    <option>
+                        Seni Budaya
+                    </option>
+
+                    <option>
+                        Sosiologi
                     </option>
 
                     <option>
@@ -2919,14 +2993,13 @@ function bukaDetailKelas(key) {
     const max = Math.max(1,...rows.map(r => r.stats.total));
     const chart = document.getElementById("grafikKehadiranPerSiswa");
     chart.innerHTML = rows.length ? rows.map(({s,stats:st}) => {
-        const total = Math.max(1,st.total);
         const segments = [
           ["hadir","#1688ed"],["izin","#f59e0b"],["sakit","#8b5cf6"],["alpa","#ef4444"],["terlambat","#0f766e"]
-        ].map(([key,color]) => st[key] ? `<span title="${key}: ${st[key]}" style="width:${st[key]/total*100}%;background:${color};"></span>` : "").join("");
+        ].map(([key,color]) => st[key] ? `<span title="${key}: ${st[key]}" style="height:${st[key]/max*100}%;background:${color};"></span>` : "").join("");
         return `<div class="student-chart-row">
-          <div class="student-chart-name">${escapeHTMLRiwayat(siswaNama(s))}</div>
-          <div class="student-chart-track" title="Hadir ${st.hadir}, Izin ${st.izin}, Sakit ${st.sakit}, Alpa ${st.alpa}, Terlambat ${st.terlambat}">${st.total ? segments : '<span style="width:100%;background:#dbeafe;"></span>'}</div>
           <div class="student-chart-total">${st.total} catatan</div>
+          <div class="student-chart-track" title="Hadir ${st.hadir}, Izin ${st.izin}, Sakit ${st.sakit}, Alpa ${st.alpa}, Terlambat ${st.terlambat}">${st.total ? segments : '<span style="height:3%;background:#dbeafe;"></span>'}</div>
+          <div class="student-chart-name">${escapeHTMLRiwayat(siswaNama(s))}</div>
         </div>`;
     }).join("") : '<div class="chart-empty">Belum ada siswa terdaftar di kelas ini.</div>';
     document.getElementById("kelasDetailBody").innerHTML = rows.length ? rows.map(({s,stats:st},i) => `<tr>

@@ -999,10 +999,33 @@ body{background:linear-gradient(135deg,#f5f9ff,#edf5ff);color:#122b4d}
             class="login-message"
         ></div>
 
+        <div style="margin-top:18px;border-top:1px solid #dbeafe;padding-top:16px;text-align:center">
+          <div style="font-size:12px;color:#64748b;margin-bottom:9px">Orang tua / wali murid</div>
+          <button type="button" id="btnPortalOrtu" class="login-button" style="background:linear-gradient(135deg,#0f766e,#14b8a6);width:100%">MASUK SEBAGAI ORANG TUA</button>
+        </div>
+
     </div>
 
 </section>
 
+
+<!-- PORTAL ORANG TUA: pencarian siswa tanpa login -->
+<section id="portalOrtu" style="display:none;min-height:100vh;background:#f3f7ff;padding:24px 16px;font-family:inherit">
+ <div style="max-width:900px;margin:0 auto">
+  <button id="btnKembaliLogin" type="button" style="border:0;background:#e0ecff;color:#174ea6;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer">← Kembali</button>
+  <div style="background:white;border:1px solid #dbeafe;border-radius:22px;padding:24px;margin-top:18px;box-shadow:0 15px 40px #12315a12">
+   <div style="font-size:12px;letter-spacing:1.5px;color:#2563eb;font-weight:800">SIBAS • PORTAL ORANG TUA</div>
+   <h1 style="margin:8px 0;color:#102a56;font-size:clamp(24px,4vw,34px)">Pantau Kehadiran Anak</h1>
+   <p style="color:#64748b;margin-top:0">Cari menggunakan nama lengkap siswa dan kelasnya.</p>
+   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+    <input id="ortuNama" type="text" placeholder="Nama lengkap siswa" style="padding:13px;border:1px solid #cbd5e1;border-radius:10px;font:inherit;min-width:0">
+    <select id="ortuKelas" style="padding:13px;border:1px solid #cbd5e1;border-radius:10px;font:inherit;background:white"><option value="">Pilih kelas</option><option value="10">Kelas 10</option><option value="11">Kelas 11</option><option value="12">Kelas 12</option></select>
+   </div>
+   <button id="btnCariAnak" type="button" style="margin-top:12px;width:100%;border:0;border-radius:10px;padding:13px;background:#1769d2;color:white;font-weight:800;font:inherit;cursor:pointer">Cari Data Anak</button>
+   <div id="ortuHasil" style="margin-top:18px"></div>
+  </div>
+ </div>
+</section>
 
 <!-- =====================================================
      APP
@@ -3487,6 +3510,53 @@ const auth =
 
 const db =
     getFirestore(app);
+
+
+// PORTAL ORANG TUA (pencarian baca-saja)
+const portalOrtu = document.getElementById("portalOrtu");
+const btnPortalOrtu = document.getElementById("btnPortalOrtu");
+const btnKembaliLogin = document.getElementById("btnKembaliLogin");
+const btnCariAnak = document.getElementById("btnCariAnak");
+const ortuHasil = document.getElementById("ortuHasil");
+btnPortalOrtu?.addEventListener("click", () => {
+  loginPage.style.display = "none";
+  appPage.style.display = "none";
+  portalOrtu.style.display = "block";
+  ortuHasil.innerHTML = "";
+});
+btnKembaliLogin?.addEventListener("click", () => {
+  portalOrtu.style.display = "none";
+  loginPage.style.display = "flex";
+});
+btnCariAnak?.addEventListener("click", async () => {
+  const nama = (document.getElementById("ortuNama").value || "").trim().toLocaleLowerCase('id');
+  const kelas = document.getElementById("ortuKelas").value;
+  if (!nama || !kelas) { ortuHasil.innerHTML = '<p style="color:#b91c1c">Masukkan nama lengkap dan pilih kelas terlebih dahulu.</p>'; return; }
+  btnCariAnak.disabled = true; btnCariAnak.textContent = "Mencari...";
+  try {
+    const [ss, aa] = await Promise.all([getDocs(collection(db, "siswa")), getDocs(collection(db, "absensi"))]);
+    const siswaList = ss.docs.map(d => ({id:d.id, ...d.data()}));
+    const key = v => String(v ?? '').trim().toLocaleLowerCase('id').replace(/\s+/g,' ');
+    const kelasKey = v => { const m = String(v ?? '').match(/(?:kelas\s*)?(10|11|12)/i); return m ? m[1] : String(v ?? '').trim(); };
+    const found = siswaList.filter(x => key(x.nama ?? x.Nama) === nama && kelasKey(x.kelas ?? x.Kelas ?? x.rombel ?? x.ruangKelas) === kelas);
+    if (!found.length) { ortuHasil.innerHTML = '<div style="padding:16px;background:#fff7ed;border-radius:12px;color:#9a3412">Data siswa tidak ditemukan. Periksa kembali nama dan kelasnya.</div>'; return; }
+    if (found.length > 1) { ortuHasil.innerHTML = '<div style="padding:16px;background:#fff7ed;border-radius:12px;color:#9a3412">Ada lebih dari satu nama yang cocok. Hubungi admin sekolah untuk memastikan data siswa.</div>'; return; }
+    const siswa = found[0];
+    const records = aa.docs.map(d => ({id:d.id,...d.data()})).filter(a => String(a.nis ?? a.siswaNis ?? a.siswaId ?? a.idSiswa ?? '') === String(siswa.nis ?? siswa.NIS ?? siswa.id));
+    const statusKey = v => String(v ?? '').toLocaleLowerCase('id').trim();
+    const count = status => records.filter(r => statusKey(r.status ?? r.keterangan) === status).length;
+    const hadir = count('hadir') + count('terlambat');
+    const alpa = records.filter(r => ['alpa','alpha','tidak hadir'].includes(statusKey(r.status ?? r.keterangan))).length;
+    const total = records.length;
+    const pct = total ? Math.round(hadir / total * 100) : 0;
+    const escapeHtml = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const sorted = records.slice().sort((a,b)=>String(b.tanggal ?? '').localeCompare(String(a.tanggal ?? ''))).slice(0,30);
+    ortuHasil.innerHTML = `<div style="border:1px solid #dbeafe;border-radius:16px;overflow:hidden"><div style="background:#eff6ff;padding:18px"><div style="font-size:12px;color:#2563eb;font-weight:800">DATA SISWA</div><h2 style="margin:6px 0;color:#102a56">${escapeHtml(siswa.nama ?? siswa.Nama)}</h2><div style="color:#475569">NIS: ${escapeHtml(siswa.nis ?? siswa.NIS ?? '-')} · Kelas ${escapeHtml(kelas)}</div></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;padding:14px"><div style="background:#f0fdf4;padding:14px;border-radius:12px"><small>Hadir + terlambat</small><h2 style="margin:5px 0;color:#15803d">${hadir}</h2></div><div style="background:#eff6ff;padding:14px;border-radius:12px"><small>Persentase hadir</small><h2 style="margin:5px 0;color:#1d4ed8">${pct}%</h2></div><div style="background:#fee2e2;padding:14px;border-radius:12px"><small>Catatan Alpa</small><h2 style="margin:5px 0;color:#b91c1c">${alpa}</h2></div><div style="background:#fff7ed;padding:14px;border-radius:12px"><small>Total catatan</small><h2 style="margin:5px 0;color:#c2410c">${total}</h2></div></div><div style="padding:0 14px 14px"><h3>Riwayat Absensi Terbaru</h3>${sorted.length ? `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left;padding:9px;border-bottom:1px solid #e2e8f0">Tanggal</th><th style="text-align:left;padding:9px;border-bottom:1px solid #e2e8f0">Mata Pelajaran</th><th style="text-align:left;padding:9px;border-bottom:1px solid #e2e8f0">Status</th></tr></thead><tbody>${sorted.map(r=>`<tr><td style="padding:9px;border-bottom:1px solid #f1f5f9">${escapeHtml(r.tanggal ?? '-')}</td><td style="padding:9px;border-bottom:1px solid #f1f5f9">${escapeHtml(r.mapel ?? r.mataPelajaran ?? '-')}</td><td style="padding:9px;border-bottom:1px solid #f1f5f9">${escapeHtml(r.status ?? r.keterangan ?? '-')}</td></tr>`).join('')}</tbody></table></div>` : '<p style="color:#64748b">Belum ada riwayat absensi yang cocok untuk siswa ini.</p>'}</div></div>`;
+  } catch (err) {
+    console.error(err);
+    ortuHasil.innerHTML = '<div style="padding:16px;background:#fef2f2;border-radius:12px;color:#b91c1c">Data belum dapat dimuat. Periksa aturan akses Firestore; jangan membuka semua data siswa secara publik hanya agar fitur ini berjalan.</div>';
+  } finally { btnCariAnak.disabled = false; btnCariAnak.textContent = "Cari Data Anak"; }
+});
 
 
 // =====================================================
